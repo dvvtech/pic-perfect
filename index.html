@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resizify - Изменение размеров изображений</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600">
+    <!-- Заголовок -->
+    <div class="bg-blue-600 py-4 px-6 shadow-lg">
+        <h1 class="text-4xl font-extrabold text-white text-left">Resizify</h1>
+    </div>
+
+    <div class="flex items-center justify-center h-screen">
+        <div class="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-xl transition-transform transform hover:scale-105">
+            <!-- Вкладки -->
+            <div class="flex space-x-4 mb-6">
+                <button id="resizeTab" class="tab-button bg-blue-500 text-white py-2 px-4 rounded-lg transition duration-300 hover:bg-blue-600">Изменение размера</button>
+                <button id="cropTab" class="tab-button bg-gray-200 text-gray-800 py-2 px-4 rounded-lg transition duration-300 hover:bg-gray-300">Обрезка</button>
+                <button id="removeBgTab" class="tab-button bg-gray-200 text-gray-800 py-2 px-4 rounded-lg transition duration-300 hover:bg-gray-300">Удаление фона</button>
+            </div>
+
+            <!-- Контент вкладок -->
+            <div id="resizeContent" class="tab-content active">
+                <!-- Форма изменения размера -->
+                <label for="imageInputResize" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer hover:bg-blue-600 transition duration-300">Выберите изображение</label>
+                <input type="file" id="imageInputResize" class="hidden">
+
+                <div class="mt-4 border border-gray-300 flex justify-center items-center rounded-lg overflow-hidden">
+                    <img id="imagePreviewResize" alt="Предпросмотр изображения" class="hidden max-w-full max-h-96 object-contain">
+                </div>
+
+                <div id="dimensionInputsResize" class="mt-4 hidden">
+                    <input type="number" id="widthInputResize" placeholder="Ширина" class="border p-3 rounded-lg mr-2 focus:outline-none focus:ring focus:ring-blue-300">
+                    <input type="number" id="heightInputResize" placeholder="Высота" class="border p-3 rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
+                </div>
+
+                <button id="resizeButton" class="mt-4 bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300 hidden">Изменить размер</button>
+            </div>
+
+            <div id="cropContent" class="tab-content hidden">
+                <!-- Форма обрезки -->
+                <p>Функция обрезки будет здесь.</p>
+            </div>
+
+            <div id="removeBgContent" class="tab-content hidden">
+                <!-- Форма удаления фона -->
+                <p>Функция удаления фона будет здесь.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переключение между вкладками
+        const resizeTab = document.getElementById('resizeTab');
+        const cropTab = document.getElementById('cropTab');
+        const removeBgTab = document.getElementById('removeBgTab');
+
+        const resizeContent = document.getElementById('resizeContent');
+        const cropContent = document.getElementById('cropContent');
+        const removeBgContent = document.getElementById('removeBgContent');
+
+        resizeTab.addEventListener('click', () => {
+            resizeContent.classList.add('active');
+            cropContent.classList.remove('active');
+            removeBgContent.classList.remove('active');
+            setActiveTab(resizeTab);
+        });
+
+        cropTab.addEventListener('click', () => {
+            cropContent.classList.add('active');
+            resizeContent.classList.remove('active');
+            removeBgContent.classList.remove('active');
+            setActiveTab(cropTab);
+        });
+
+        removeBgTab.addEventListener('click', () => {
+            removeBgContent.classList.add('active');
+            resizeContent.classList.remove('active');
+            cropContent.classList.remove('active');
+            setActiveTab(removeBgTab);
+        });
+
+        function setActiveTab(activeButton) {
+            const buttons = [resizeTab, cropTab, removeBgTab];
+            buttons.forEach(button => {
+                if (button === activeButton) {
+                    button.classList.remove('bg-gray-200', 'text-gray-800');
+                    button.classList.add('bg-blue-500', 'text-white');
+                } else {
+                    button.classList.add('bg-gray-200', 'text-gray-800');
+                    button.classList.remove('bg-blue-500', 'text-white');
+                }
+            });
+        }
+
+        // Обработка изображения для вкладки "Изменение размера"
+        const inputResize = document.getElementById('imageInputResize');
+        const imgPreviewResize = document.getElementById('imagePreviewResize');
+        const widthInputResize = document.getElementById('widthInputResize');
+        const heightInputResize = document.getElementById('heightInputResize');
+
+        let imgResize = new Image();
+
+        inputResize.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                imgResize.src = event.target.result;
+                imgPreviewResize.src = event.target.result;
+                imgPreviewResize.classList.remove('hidden');
+
+                imgResize.onload = function() {
+                    widthInputResize.value = imgResize.width;
+                    heightInputResize.value = imgResize.height;
+                    widthInputResize.parentNode.parentNode.classList.remove('hidden'); // Показываем поля для ввода
+                    document.getElementById('resizeButton').classList.remove('hidden'); // Показываем кнопку "Изменить размер"
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Обработка события нажатия на кнопку "Изменить размер"
+        document.getElementById('resizeButton').addEventListener('click', function() {
+            const newWidth = parseInt(widthInputResize.value) || 200;
+            const newHeight = parseInt(heightInputResize.value) || 200;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const ctx = canvas.getContext('2d');
+
+            ctx.drawImage(imgResize, 0, 0, newWidth, newHeight);
+
+            const dataURL = canvas.toDataURL('image/png');
+
+            // Создаем временную ссылку для скачивания
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'resized_image.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
